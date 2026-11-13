@@ -12,7 +12,7 @@ This is a small GB.pak for MinUI on the M17 handheld. It shows Game Boy games at
 The usual Aspect mode stretches 144 rows into 272 rows, a factor of 1.8889, which leaves uneven thin lines all over the picture with nearest-neighbour scaling. This pak keeps the main part of the picture perfectly square and moves the distortion into the outer 16 rows instead. The top of the screen will look squashed. That is expected, not a bug.
 It has been tested on a real M17: the pak loads and the game runs. The exact pixel layout has not yet been checked against a screenshot.
 How to use:
-1. Get gambatte_libretro.so (1,139,472 bytes) from the official MinUI release v20251127-1, https://github.com/shauninman/MinUI/releases/tag/v20251127-1 . 
+1. Get the official MinUI release v20251127-1, https://github.com/shauninman/MinUI/releases/tag/v20251127-1 . 
 2. Copy the whole GB.pak folder to /sdcard/Emus/m17/GB.pak/ on the SD card. Keep the folder name. It should contain launch.sh, default.cfg, gambatte_libretro.so and minarch.elf.
 3. Start a Game Boy game, open Menu, then Options, and set Screen Scaling to Aspect and Screen Sharpness to Sharp. Do not use Crisp. If you changed scaling before, the user config in .userdata overrides default.cfg, so select Aspect again in the menu.
 4. You should see the picture from x=80 to x=399. The middle is uniform 2x2 pixels and the top and bottom 8 rows are flat 2x1 pixels.

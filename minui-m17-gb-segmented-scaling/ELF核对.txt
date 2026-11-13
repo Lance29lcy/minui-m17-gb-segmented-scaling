@@ -1,0 +1,41 @@
+============================================================
+minarch.elf 本机构建产物核对
+============================================================
+目标   : GB.pak/minarch.elf（本仓库收录）
+对照   : 官方 v20251127-1 原版 minarch.elf（本仓库不收录，复跑核对时自备）
+目标   : 72816 bytes  sha256=1bd2bd8bccb49767c8e923a793d283250634466a70711b70cfb06638c60b9f10
+对照   : 103348 bytes  sha256=07ba44e2bfa9848302aa9dc77fa8e2d8787aef0555a5dc28be70baf5a43a30fc
+
+[1] ELF 基本属性
+  PASS  ELF32 / little endian / ARM
+  PASS  hard-float ABI (0x5000400)  | 官方：hard-float
+  PASS  Type = EXEC，与官方一致
+  PASS  PT_INTERP = /lib/ld-linux-armhf.so.3 且一致
+
+[2] 动态依赖与符号版本
+  PASS  DT_NEEDED 集合与官方完全相同（9 项）  | libSDL2-2.0.so.0,libSDL2_image-2.0.so.0,libSDL2_ttf-2.0.so.0,libc.so.6,libdl.so.2,libm.so.6,libmsettings.so,libpthread.so.0,libz.so.1
+  PASS  glibc 版本需求与官方一致  | 目标=2.4,2.7 官方=2.4,2.7
+  PASS  无 GLIBC_2.28+ 新符号（设备 glibc 2.26 可加载）
+  PASS  未定义符号未新增（设备不会找不到符号）  | 新增=无
+  PASS  官方独有多余符号仅 _Jv_RegisterClasses 类无关项  | 差异=_Jv_RegisterClasses
+
+[3] ARM 属性
+  PASS  CPU = ARMv7-A (Cortex-A7 匹配)
+  PASS  NEONv1 + VFP registers 调用约定
+
+[4] 分段绘制代码证据（反汇编）
+  PASS  SDL_RenderCopy 调用点比官方多 3（三段展开）  | 官方=3 目标=6
+  PASS  SDL_RenderPresent 调用点比官方多 1（分段分支提前 return）  | 官方=3 目标=4
+  PASS  PLAT_flip 内存在连续三次 RenderCopy + Present  | 符号=PLAT_flip.constprop.21
+  PASS  机器码含 8/128/160/256/272/320 全套分段常数  | 缺失=无
+
+[5] 编译标识与 pak 装配
+  PASS  BUILD_HASH = dbf8943（源码 HEAD）
+  PASS  minarch.elf 与官方不是同一个文件
+  PASS  launch.sh 优先使用 pak 内 minarch.elf
+  PASS  launch.sh 保留系统 elf 回退
+  PASS  default.cfg 预设 Aspect + Sharp
+
+============================================================
+合计 20/20 项通过
+============================================================

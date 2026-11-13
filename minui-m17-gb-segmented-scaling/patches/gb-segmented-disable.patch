@@ -1,0 +1,12 @@
+diff --git a/workspace/m17/platform/platform.c b/workspace/m17/platform/platform.c
+--- a/workspace/m17/platform/platform.c
++++ b/workspace/m17/platform/platform.c
+@@ -25,7 +25,7 @@
+ // 160 x 2 = 320 output cols. Only the GB pak (patched gambatte reporting
+ // aspect 320/273) triggers it; every other core keeps the stock path.
+ // Set GB_SEGMENTED_SCALE to 0 to restore stock MinUI rendering completely.
+-#define GB_SEGMENTED_SCALE	1
++#define GB_SEGMENTED_SCALE	0
+ #define GB_SEG_TOP			8	// source rows drawn at 1x on the top
+ #define GB_SEG_MID			128	// source rows drawn at 2x in the middle
+ #define GB_SEG_BOT			8	// source rows drawn at 1x on the bottom

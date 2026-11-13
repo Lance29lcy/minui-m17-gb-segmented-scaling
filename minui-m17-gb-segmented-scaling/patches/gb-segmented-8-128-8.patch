@@ -1,0 +1,53 @@
+diff --git a/workspace/m17/platform/platform.c b/workspace/m17/platform/platform.c
+index 14bb7a2..c5d19c1 100644
+--- a/workspace/m17/platform/platform.c
++++ b/workspace/m17/platform/platform.c
+@@ -20,6 +20,17 @@
+ 
+ ///////////////////////////////
+ 
++// GB 160x144 -> 320x272 segmented integer scaling.
++// 8 source rows x1 + 128 source rows x2 + 8 source rows x1 = 272 output rows,
++// 160 x 2 = 320 output cols. Only the GB pak (patched gambatte reporting
++// aspect 320/273) triggers it; every other core keeps the stock path.
++// Set GB_SEGMENTED_SCALE to 0 to restore stock MinUI rendering completely.
++#define GB_SEGMENTED_SCALE	1
++#define GB_SEG_TOP			8	// source rows drawn at 1x on the top
++#define GB_SEG_MID			128	// source rows drawn at 2x in the middle
++#define GB_SEG_BOT			8	// source rows drawn at 1x on the bottom
++#define GB_SEG_W			320	// output width (160 x 2)
++
+ #define RAW_UP		103
+ #define RAW_DOWN	108
+ #define RAW_LEFT	105
+@@ -393,6 +404,30 @@ void PLAT_flip(SDL_Surface* IGNORED, int ignored) {
+ 	
+ 	SDL_Rect* src_rect = &(SDL_Rect){0,0,w,h};
+ 	SDL_Rect* dst_rect = NULL;
++#if GB_SEGMENTED_SCALE
++	// Crisp pre-scales the texture by hard_scale, so its source coordinates
++	// would need multiplying; keep that mode on the stock path instead.
++	if (vid.sharpness!=SHARPNESS_CRISP && vid.blit->src_w==160 &&
++	    vid.blit->src_h==144 && vid.blit->aspect>1.1721 &&
++	    vid.blit->aspect<1.1722) {
++		int x = (FIXED_WIDTH - GB_SEG_W) / 2;
++		SDL_Rect s[3] = {
++			{0, 0,                              160, GB_SEG_TOP},
++			{0, GB_SEG_TOP,                     160, GB_SEG_MID},
++			{0, GB_SEG_TOP + GB_SEG_MID,        160, GB_SEG_BOT},
++		};
++		SDL_Rect d[3] = {
++			{x, 0,                              GB_SEG_W, GB_SEG_TOP},
++			{x, GB_SEG_TOP,                     GB_SEG_W, GB_SEG_MID * 2},
++			{x, GB_SEG_TOP + GB_SEG_MID * 2,    GB_SEG_W, GB_SEG_BOT},
++		};
++		for (int i=0; i<3; i++)
++			SDL_RenderCopy(vid.renderer, target, &s[i], &d[i]);
++		SDL_RenderPresent(vid.renderer);
++		vid.blit = NULL;
++		return;
++	}
++#endif
+ 	if (vid.blit->aspect==0) { // native or cropped
+ 		int w = vid.blit->src_w * vid.blit->scale;
+ 		int h = vid.blit->src_h * vid.blit->scale;

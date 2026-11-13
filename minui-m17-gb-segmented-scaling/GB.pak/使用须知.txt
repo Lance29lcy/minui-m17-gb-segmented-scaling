@@ -1,0 +1,49 @@
+这个 pak 附带编译好的 minarch.elf（8/128/8 分段缩放版）。
+
+⚠️ 本仓库【不含官方 gambatte_libretro.so】：因上游未附 LICENSE，不随仓库分发。
+   请先看仓库根目录 README.md「快速开始」第 1、2 步：
+   从官方 v20251127-1 release 取出核心，再用 ../tools/patch_core.py
+   打 aspect 补丁后放到本目录。不打补丁不会触发分段缩放。
+
+安装
+  把整个 GB.pak/ 放到 /sdcard/Emus/m17/GB.pak/，文件夹名不要改。
+  进 GB 游戏 → Menu → Options：
+    Screen Scaling   = Aspect
+    Screen Sharpness = Sharp
+  ⚠️ .userdata 里的 user cfg 优先级高于 pak 的 default.cfg；
+     如果以前手动改过缩放，要在菜单里重新选一次 Aspect。
+  不要用 Crisp：它会先把纹理放大 4 倍，源坐标对不上，代码故意让
+  Crisp 走原版路径（不分段）。
+
+现在应该看到的画面
+  x=80..399 是画面，左右各 80px 黑边；
+  中间 y=8..263 是均匀 2×2 像素；上下各 8 行是 2×1 扁像素。
+  顶部第一个选项框会明显被压扁 —— 这是 8/128/8 方案固有取舍。
+
+这个 elf 是怎么来的
+  源码：MinUI HEAD dbf8943 + patches/gb-segmented-8-128-8.patch（只改
+  workspace/m17/platform/platform.c，+35 行），本机 Docker 容器内用
+  Debian buster 的 arm-linux-gnueabihf-gcc 8.3 交叉编译，产物 72,816 字节。
+  与官方 v20251127-1 的 .system/m17/bin/minarch.elf 逐项对照：
+    ELF32 ARM / hard-float / EXEC / 同一 PT_INTERP
+    9 个 DT_NEEDED 完全一致
+    只需 GLIBC_2.4、GLIBC_2.7（设备 glibc 2.26 可加载）
+    未定义符号 137 个，比官方 138 个少 1 个无关项，没有新增符号
+    反汇编比官方多 3 次 SDL_RenderCopy、1 次 SDL_RenderPresent，
+    且含 8/128/160/256/272/320 全套常数 → 分段分支确实编进去了
+  自动核对 20/20 PASS，报告见 ../ELF核对.txt（复跑需自备官方对照 elf）。
+
+严格区分（2026-11-13 更新）
+  已验证：本机静态 20/20 核对通过；且 M17 实机装卡运行成功 —— pak 自带
+          minarch.elf 正常加载、GB 游戏可进入运行，无动态库/符号错误。
+  待观察：分段画面的逐像素效果（2×2 / 2×1 分段、顶部压扁程度）尚无
+          实机截图佐证；「能跑」不等于「已逐像素核对」。
+  如与预期不同，把 GB.pak/minarch.elf 临时移走即可退回上一轮
+  已实机验证的 A 方案，不会损坏任何东西。
+
+回滚
+  删 GB.pak/minarch.elf       → 回到 A 方案（Aspect + nearest 1.8889x）
+  删 /sdcard/Emus/m17/GB.pak/ → 完全回到原版 MinUI
+  .system/ 下一个字节都没有动过。
+
+详见仓库根目录 README.md、实现说明.md、本机构建说明.md、LICENSE-NOTICE.md
